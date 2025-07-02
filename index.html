@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>My Page</title>
+</head>
+<body>
+
+  <h1>Form To Input Question Info</h1>
+
+  <form id="questionForm" method="POST">
+
+    <hr>
+    <h3>Section</h3>
+    <input type="radio" id="data" name="section" value="data">
+    <label for="data">Data Structure</label><br>
+    <input type="radio" id="alg" name="section" value="alg">
+    <label for="alg">Algorithms</label><br>
+    <input type="radio" id="discrete" name="section" value="discrete">
+    <label for="discrete">Discrete Math</label>
+
+    <hr>
+    <h3>Difficulty</h3>
+    <input type="radio" id="easy" name="difficulty" value="easy">
+    <label for="easy">EASY</label><br>
+    <input type="radio" id="medium" name="difficulty" value="medium">
+    <label for="medium">MEDIUM</label><br>
+    <input type="radio" id="hard" name="difficulty" value="hard">
+    <label for="hard">HARD</label><br>
+
+    <hr>
+    <h3>Question Text</h3>
+    <button type="button" onclick="postForm('/preview')">Preview</button>
+    <br>
+    <label for="problem">Latex Problem:</label><br>
+    <textarea id="problem" name="problem" rows="10" cols="50"></textarea>
+    <img id="previewImage" style="display:none; max-width:100%; margin-top:20px;" alt="Preview Image" />
+
+    <hr>
+    <button type="button" onclick="postForm('/submit')">Submit</button>
+
+  </form>
+
+  <script>
+
+    function postForm(endpoint) {
+
+      const section = document.querySelector('input[name="section"]:checked')?.value || "";
+      const difficulty = document.querySelector('input[name="difficulty"]:checked')?.value || "";
+      const problem = document.getElementById('problem').value;
+      const form = document.getElementById('questionForm');
+      const previewImage = document.getElementById('previewImage');
+
+
+      if (endpoint === '/preview') {
+        fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ section, difficulty, problem })
+        })
+        .then(response => {
+          if (!response.ok) throw new Error('Failed to load preview image');
+          return response.blob();
+        })
+        .then(blob => {
+          const imgUrl = URL.createObjectURL(blob);
+          previewImage.src = imgUrl;
+          previewImage.style.display = "block";
+        })
+        .catch(error => { console.error('Preview error:', error.message); });
+      } else {
+        if (!section || !difficulty || !problem) return;
+        fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ section, difficulty, problem })
+        })
+        .then(async (response) => {
+          if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.message || 'Submit failed');
+          }
+          return response.json();
+        })
+        .then(() => {
+          form.reset();
+          previewImage.style.display = "none";
+        })
+        .catch(error => { console.error('Submit error:', error.message); });
+      }
+    }
+
+  </script>
+
+</body>
+</html>
