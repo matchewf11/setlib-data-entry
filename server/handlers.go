@@ -89,10 +89,7 @@ func (s *server) HandleSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = s.db.Exec(`
-	INSERT INTO problems (section, difficulty, problem) 
-	VALUES (?, ?, ?);`,
-		currForm.Section, currForm.Difficulty, currForm.Problem)
+	err = s.storage.InsertProblem(currForm.Section, currForm.Difficulty, currForm.Problem)
 	if err != nil {
 		http.Error(w, "unable to write to db", http.StatusInternalServerError)
 		return

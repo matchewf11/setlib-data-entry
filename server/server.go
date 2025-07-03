@@ -1,10 +1,10 @@
 package server
 
 import (
-	"database/sql"
 	_ "embed"
 	"log"
 	"os"
+	"setlib-data-entry/storage"
 	"strings"
 )
 
@@ -28,17 +28,17 @@ func init() {
 }
 
 type server struct {
-	db   *sql.DB
-	html string
+	storage *storage.Storage
+	html    string
 }
 
-func New(db *sql.DB) *server {
+func New(storage *storage.Storage) *server {
 
 	finalHTML := strings.Replace(htmlTemplate, "<!--SCRIPT-->", "<script>"+scriptJS+"</script>", 1)
 	finalHTML = strings.Replace(finalHTML, "<!--STYLES-->", "<style>"+stylesCSS+"</style>", 1)
 
 	return &server{
-		db:   db,
-		html: finalHTML,
+		storage: storage,
+		html:    finalHTML,
 	}
 }

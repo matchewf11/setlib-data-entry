@@ -5,19 +5,19 @@ import (
 	"log"
 	"net/http"
 	"setlib-data-entry/server"
-	db "setlib-data-entry/storage"
+	storage "setlib-data-entry/storage"
 )
 
 // starting point of the program
 func main() {
 
-	db, err := db.New()
+	storage, err := storage.New()
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+	defer storage.Close()
 
-	svr := server.New(db)
+	svr := server.New(storage)
 
 	http.HandleFunc("/", svr.HandleGet)
 	http.HandleFunc("/preview", svr.HandlePreview)
