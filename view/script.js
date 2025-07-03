@@ -21,13 +21,13 @@ function previewPost() {
 }
 
 function submitPost() {
+  const problem = document.getElementById("problem").value;
+  const form = document.getElementById("questionForm");
+  const previewImage = document.getElementById("previewImage");
   const section =
     document.querySelector('input[name="section"]:checked')?.value || "";
   const difficulty =
     document.querySelector('input[name="difficulty"]:checked')?.value || "";
-  const problem = document.getElementById("problem").value;
-  const form = document.getElementById("questionForm");
-  const previewImage = document.getElementById("previewImage");
 
   if (!section || !difficulty || !problem) return;
 
