@@ -11,8 +11,10 @@ import (
 )
 
 const (
-	jsonFileName = "storage/jsonData.json"
-	sqlFileName  = "storage/sqlData.sql"
+	storageDir   = "storage"
+	imgDir       = "images"
+	jsonFileName = "data.json"
+	sqlFileName  = "data.sql"
 	port         = ":8080"
 )
 
@@ -21,31 +23,28 @@ var htmlTemplate string
 
 var jsonFile, sqlFile *os.File
 
+// make a directory, will possible throw
+func makeDir(fldrName string) {
+	if err := os.MkdirAll(fldrName, 0755); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// make a wr file, will possibly throw
+func makeFile(fileName string) *os.File {
+	filePath := fmt.Sprintf("%s/%s", storageDir, fileName)
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return file
+}
+
 // Init the file vars
 func init() {
-
-	err := os.MkdirAll("storage", 0755)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = os.MkdirAll("images", 0755)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	json, err := os.OpenFile(jsonFileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	sql, err := os.OpenFile(sqlFileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	jsonFile, sqlFile = json, sql
-
+	makeDir(storageDir)
+	makeDir(imgDir)
+	jsonFile, sqlFile = makeFile(jsonFileName), makeFile(sqlFileName)
 }
 
 // starting point of the program
@@ -61,6 +60,7 @@ func main() {
 	http.HandleFunc("/submit", submitHandler)
 
 	fmt.Printf("http://localhost%s/\n", port)
+
 	if err := http.ListenAndServe(port, nil); err != nil {
 		log.Fatal(err)
 	}
@@ -81,11 +81,11 @@ func previewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	latex := `\documentclass[preview]{standalone}
+	latex := fmt.Sprintf(`\documentclass[preview]{standalone}
 \usepackage{amsmath}
 \begin{document}
-` + currForm.Problem + `
-\end{document}`
+%s
+\end{document}`, currForm.Problem)
 
 	err = os.WriteFile("preview.tex", []byte(latex), 0644)
 	if err != nil {
