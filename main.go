@@ -23,6 +23,9 @@ var htmlTemplate string
 //go:embed view/script.js
 var scriptJS string
 
+//go:embed view/styles.css
+var stylesCSS string
+
 var storage struct {
 	jsonFile, sqlFile, plainFile *os.File
 	sqlDb                        *sql.DB
@@ -91,7 +94,8 @@ func main() {
 	http.HandleFunc("/preview", previewHandler)
 	http.HandleFunc("/submit", submitHandler)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		finalHTML := strings.Replace(htmlTemplate, "{{SCRIPT}}", scriptJS, 1)
+		finalHTML := strings.Replace(htmlTemplate, "<!--SCRIPT-->", "<script>"+scriptJS+"</script>", 1)
+		finalHTML = strings.Replace(finalHTML, "<!--STYLES-->", "<style>"+stylesCSS+"</style>", 1)
 		w.Header().Set("Content-Type", "text/html")
 		fmt.Fprint(w, finalHTML)
 	})
