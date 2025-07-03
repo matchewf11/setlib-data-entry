@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>My Page</title>
+  <title>Setlib Input</title>
 </head>
 <body>
 
-  <h1>Form To Input Question Info</h1>
+  <h1>Setlib Question Input</h1>
 
   <form id="questionForm" method="POST">
 
@@ -32,64 +32,65 @@
 
     <hr>
     <h3>Question Text</h3>
-    <button type="button" onclick="postForm('/preview')">Preview</button>
+    <button type="button" onclick="previewPost()">Preview</button>
     <br>
     <label for="problem">Latex Problem:</label><br>
     <textarea id="problem" name="problem" rows="10" cols="50"></textarea>
     <img id="previewImage" style="display:none; max-width:100%; margin-top:20px;" alt="Preview Image" />
 
     <hr>
-    <button type="button" onclick="postForm('/submit')">Submit</button>
+    <button type="button" onclick="submitPost()">Submit</button>
 
   </form>
 
   <script>
 
-    function postForm(endpoint) {
+    function previewPost() {
+      const problem = document.getElementById('problem').value;
+      const previewImage = document.getElementById('previewImage');
 
+      fetch("/preview", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ problem })
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to load preview image');
+        return response.blob();
+      })
+      .then(blob => {
+        previewImage.src = URL.createObjectURL(blob);
+        previewImage.style.display = "block";
+      })
+      .catch(error => { console.error('Preview error:', error.message); });
+    }
+
+    function submitPost() {
       const section = document.querySelector('input[name="section"]:checked')?.value || "";
       const difficulty = document.querySelector('input[name="difficulty"]:checked')?.value || "";
       const problem = document.getElementById('problem').value;
       const form = document.getElementById('questionForm');
       const previewImage = document.getElementById('previewImage');
 
+      if (!section || !difficulty || !problem) return;
 
-      if (endpoint === '/preview') {
-        fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ section, difficulty, problem })
-        })
-        .then(response => {
-          if (!response.ok) throw new Error('Failed to load preview image');
-          return response.blob();
-        })
-        .then(blob => {
-          const imgUrl = URL.createObjectURL(blob);
-          previewImage.src = imgUrl;
-          previewImage.style.display = "block";
-        })
-        .catch(error => { console.error('Preview error:', error.message); });
-      } else {
-        if (!section || !difficulty || !problem) return;
-        fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ section, difficulty, problem })
-        })
-        .then(async (response) => {
-          if (!response.ok) {
-            const errData = await response.json();
-            throw new Error(errData.message || 'Submit failed');
-          }
-          return response.json();
-        })
-        .then(() => {
-          form.reset();
-          previewImage.style.display = "none";
-        })
-        .catch(error => { console.error('Submit error:', error.message); });
-      }
+      fetch("/submit", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ section, difficulty, problem })
+      })
+      .then(async (response) => {
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.message || 'Submit failed');
+        }
+        return response.json();
+      })
+      .then(() => {
+        form.reset();
+        previewImage.style.display = "none";
+      })
+      .catch(error => { console.error('Submit error:', error.message); });
     }
 
   </script>
