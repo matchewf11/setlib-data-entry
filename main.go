@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	_ "embed"
 	"encoding/json"
 	"fmt"
@@ -9,44 +10,28 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
-// need to validate latex
-// need to validate before saving as json
-// need to validate before doing the sql
+const imgDir = "images"
 
-const (
-	storageDir    = "storage"
-	imgDir        = "images"
-	latexImg      = "preview"
-	jsonFileName  = "data.json"
-	sqlFileName   = "data.sql"
-	plainFileName = "data.txt"
-	port          = ":8080"
-	jsonFormat    = `
-  {
-    "section": "%s",
-    "difficulty": "%s",
-    "problem": "%s"
-  },`
-	latexFormat = `\documentclass[preview]{standalone}
-\usepackage{amsmath}
-\begin{document}
-%s
-\end{document}`
-	sqlFormat = `
-INSERT INTO problems (course, difficulty, problem_text)
-VALUES (%s, %s, %s);`
-	plainFormat = "%s\n%s\n%s\n"
-)
-
-//go:embed index.html
+//go:embed view/index.html
 var htmlTemplate string
 
-var jsonFile, sqlFile, plainFile *os.File
+//go:embed view/script.js
+var scriptJS string
+
+var storage struct {
+	jsonFile, sqlFile, plainFile *os.File
+	sqlDb                        *sql.DB
+}
 
 // Init the file vars
 func init() {
+
+	const storageDir = "storage"
 
 	dirToMake := []string{storageDir, imgDir}
 
@@ -57,9 +42,9 @@ func init() {
 	}
 
 	filesToMake := map[string]**os.File{
-		jsonFileName:  &jsonFile,
-		sqlFileName:   &sqlFile,
-		plainFileName: &plainFile,
+		"data.json": &storage.jsonFile,
+		"data.sql":  &storage.sqlFile,
+		"data.txt":  &storage.plainFile,
 	}
 
 	for name, file := range filesToMake {
@@ -71,24 +56,49 @@ func init() {
 		*file = temp
 	}
 
+	db, err := sql.Open("sqlite3", filepath.Join(storageDir, "data.db"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	const createTable = `
+	CREATE TABLE IF NOT EXISTS problems (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		section TEXT NOT NULL,
+		difficulty TEXT NOT NULL,
+		problem TEXT NOT NULL
+	);`
+
+	_, err = db.Exec(createTable)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	storage.sqlDb = db
+
 }
 
 // starting point of the program
 func main() {
 
 	defer func() {
-		sqlFile.Close()
-		jsonFile.Close()
-		plainFile.Close()
+		storage.sqlFile.Close()
+		storage.jsonFile.Close()
+		storage.plainFile.Close()
+		storage.sqlDb.Close()
 	}()
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, htmlTemplate) })
 	http.HandleFunc("/preview", previewHandler)
 	http.HandleFunc("/submit", submitHandler)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		finalHTML := strings.Replace(htmlTemplate, "{{SCRIPT}}", scriptJS, 1)
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprint(w, finalHTML)
+	})
 
-	fmt.Printf("http://localhost%s/\n", port)
+	fmt.Println("http://localhost:8080/")
 
-	err := http.ListenAndServe(port, nil)
+	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -97,6 +107,14 @@ func main() {
 
 // compile latex and display
 func previewHandler(w http.ResponseWriter, r *http.Request) {
+
+	const latexImg = "preview"
+
+	const latexFormat = `\documentclass[preview]{standalone}
+\usepackage{amsmath}
+\begin{document}
+%s
+\end{document}`
 
 	defer func() {
 		fileTypesToDelete := []string{".aux", ".log", ".pdf", ".tex"}
@@ -156,6 +174,21 @@ func previewHandler(w http.ResponseWriter, r *http.Request) {
 // save as both json and sql insert queries
 func submitHandler(w http.ResponseWriter, r *http.Request) {
 
+	const insertSqliteFormat = `INSERT INTO problems (section, difficulty, problem) VALUES (?, ?, ?);`
+
+	const jsonFormat = `
+  {
+    "section": "%s",
+    "difficulty": "%s",
+    "problem": "%s"
+  },`
+
+	const sqlFormat = `
+INSERT INTO problems (course, difficulty, problem_text)
+VALUES ('%s', '%s', '%s');`
+
+	const plainFormat = "%s\n%s\n%s\n"
+
 	var currForm struct {
 		Problem    string `json:"problem"`
 		Section    string `json:"section"`
@@ -169,9 +202,9 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filesToWrite := map[string]*os.File{
-		jsonFormat:  jsonFile,
-		sqlFormat:   sqlFile,
-		plainFormat: plainFile,
+		jsonFormat:  storage.jsonFile,
+		sqlFormat:   storage.sqlFile,
+		plainFormat: storage.plainFile,
 	}
 
 	for fileFormat, file := range filesToWrite {
@@ -180,6 +213,12 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Unable to write to files", http.StatusInternalServerError)
 			return
 		}
+	}
+
+	_, err = storage.sqlDb.Exec(insertSqliteFormat, currForm.Section, currForm.Difficulty, currForm.Problem)
+	if err != nil {
+		http.Error(w, "unable to write to db", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
