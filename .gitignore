@@ -30,7 +30,4 @@ go.work.sum
 *.sql
 *.png
 *.json
-
-# Editor/IDE
-# .idea/
-# .vscode/
+*.txt
