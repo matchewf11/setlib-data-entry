@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 )
 
-const ImgDir = "images"
-
 // compile latex and display
 func (s *server) HandlePreview(w http.ResponseWriter, r *http.Request) {
 
@@ -54,7 +52,7 @@ func (s *server) HandlePreview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pngPath := filepath.Join(ImgDir, latexImg+".png")
+	pngPath := filepath.Join(imgDir, latexImg+".png")
 
 	cmd = exec.Command("magick", "-density", "300", latexImg+".pdf", "-quality", "90", pngPath)
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr

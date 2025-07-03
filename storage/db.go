@@ -2,8 +2,14 @@ package db
 
 import (
 	"database/sql"
+	_ "embed"
 	"path/filepath"
+
+	_ "github.com/mattn/go-sqlite3"
 )
+
+//go:embed schema.sql
+var dbSchema string
 
 func New() (*sql.DB, error) {
 
@@ -12,15 +18,7 @@ func New() (*sql.DB, error) {
 		return nil, err
 	}
 
-	const createTable = `
-	CREATE TABLE IF NOT EXISTS problems (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		section TEXT NOT NULL,
-		difficulty TEXT NOT NULL,
-		problem TEXT NOT NULL
-	);`
-
-	_, err = db.Exec(createTable)
+	_, err = db.Exec(dbSchema)
 	if err != nil {
 		return nil, err
 	}

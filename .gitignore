@@ -27,8 +27,5 @@ go.work.sum
 # env file
 *.env
 
-*.sql
 *.png
-*.json
-*.txt
 *.db
