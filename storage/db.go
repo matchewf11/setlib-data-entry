@@ -34,11 +34,10 @@ func (str *Storage) Close() {
 	str.db.Close()
 }
 
-func (str *Storage) InsertProblem(section, diff, prob string) error {
-	// fix this
+func (str *Storage) InsertProblem(section, diff, prob, author, topic, prob_type string) error {
 	_, err := str.db.Exec(`
 	INSERT INTO problems (section, difficulty, problem, author, topic, question_type) 
-	VALUES (?, ?, ?, ?, ?, ?);`, section, diff, prob, "Test Author", "Test Topic", "Test Type")
+	VALUES (?, ?, ?, ?, ?, ?);`, section, diff, prob, author, topic, prob_type)
 	if err != nil {
 		return err
 	}

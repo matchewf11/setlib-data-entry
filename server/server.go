@@ -33,10 +33,8 @@ type server struct {
 }
 
 func New(storage *storage.Storage) *server {
-
 	finalHTML := strings.Replace(htmlTemplate, "/*SCRIPT*/", scriptJS, 1)
 	finalHTML = strings.Replace(finalHTML, "/*STYLE*/", stylesCSS, 1)
-
 	return &server{
 		storage: storage,
 		html:    finalHTML,

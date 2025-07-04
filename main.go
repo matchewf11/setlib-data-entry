@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 	"setlib-data-entry/server"
-	storage "setlib-data-entry/storage"
+	"setlib-data-entry/storage"
 )
 
 // starting point of the program

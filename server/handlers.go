@@ -22,14 +22,13 @@ func (s *server) HandleSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&currForm)
-	if err != nil || currForm.Problem == "" || currForm.Section == "" || currForm.Difficulty == "" {
+	if err != nil {
 		http.Error(w, "unable to write to db", http.StatusInternalServerError)
 		return
 	}
 
-	err = s.storage.InsertProblem(currForm.Section, currForm.Difficulty, currForm.Problem)
+	err = s.storage.InsertProblem(currForm.Section, currForm.Difficulty, currForm.Problem, currForm.Username, currForm.Subject, currForm.Type)
 	if err != nil {
-		fmt.Println(err.Error())
 		http.Error(w, "unable to write to db", http.StatusInternalServerError)
 		return
 	}
@@ -54,14 +53,14 @@ func (s *server) HandlePreview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&currForm)
-	if err != nil || currForm.Problem == "" {
+	if err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
 	imgData, err := getPng(currForm.Problem)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Could not make png", http.StatusInternalServerError)
 		return
 	}
 
