@@ -54,3 +54,61 @@ function submitPost() {
     })
     .catch(err => console.error("Submit error:", err.message));
 }
+
+// keeping it a buck, i used chatgpt on everything below here
+const subjectOptions = {
+  data: [
+    { id: "avl", value: "avl-tree", label: "AVL Trees" },
+    { id: "heap", value: "heap", label: "Heaps" },
+    { id: "graph", value: "graph", label: "Graphs" },
+  ],
+  alg: [
+    { id: "sort", value: "sorting", label: "Sorting" },
+    { id: "search", value: "searching", label: "Searching" },
+    { id: "dp", value: "dynamic-programming", label: "Dynamic Programming" },
+  ],
+  discrete: [
+    { id: "set", value: "set-theory", label: "Set Theory" },
+    { id: "logic", value: "logic", label: "Logic" },
+    { id: "proof", value: "proof-techniques", label: "Proof Techniques" },
+  ],
+};
+
+function updateSubjects(section) {
+  const container = document.getElementById("subjectOptions");
+  container.innerHTML = ""; // Clear existing
+
+  const subjects = subjectOptions[section] || [];
+
+  subjects.forEach((subj) => {
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.id = subj.id;
+    radio.name = "subject";
+    radio.value = subj.value;
+
+    const label = document.createElement("label");
+    label.htmlFor = subj.id;
+    label.textContent = subj.label;
+
+    container.appendChild(radio);
+    container.appendChild(label);
+    container.appendChild(document.createElement("br"));
+  });
+}
+
+// Attach listeners to section radios
+document.addEventListener("DOMContentLoaded", () => {
+  const sectionRadios = document.querySelectorAll('input[name="section"]');
+  sectionRadios.forEach((radio) => {
+    radio.addEventListener("change", () => {
+      updateSubjects(radio.value);
+    });
+  });
+
+  // Optional: initialize to default if one is pre-checked
+  const prechecked = Array.from(sectionRadios).find((r) => r.checked);
+  if (prechecked) {
+    updateSubjects(prechecked.value);
+  }
+});
