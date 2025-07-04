@@ -9,71 +9,6 @@ import (
 	"path/filepath"
 )
 
-// compile latex and display
-func (s *server) HandlePreview(w http.ResponseWriter, r *http.Request) {
-
-	const latexImg = "preview"
-
-	defer func() {
-		fileTypesToDelete := []string{".aux", ".log", ".pdf", ".tex"}
-		for _, fileType := range fileTypesToDelete {
-			os.Remove(latexImg + fileType)
-		}
-	}()
-
-	var currForm struct {
-		Problem string `json:"problem"`
-	}
-
-	err := json.NewDecoder(r.Body).Decode(&currForm)
-	if err != nil || currForm.Problem == "" {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
-		return
-	}
-
-	latex := fmt.Sprintf(`\documentclass[preview]{standalone}
-\usepackage{amsmath}
-\begin{document}
-%s
-\end{document}`, currForm.Problem)
-
-	err = os.WriteFile(latexImg+".tex", []byte(latex), 0644)
-	if err != nil {
-		http.Error(w, "unable to write the latex to file", http.StatusInternalServerError)
-		return
-	}
-
-	cmd := exec.Command("pdflatex", "-interaction=nonstopmode", latexImg+".tex")
-	cmd.Dir, cmd.Stdout, cmd.Stderr = ".", os.Stdout, os.Stderr
-
-	err = cmd.Run()
-	if err != nil {
-		http.Error(w, "Error compiling LaTeX", http.StatusInternalServerError)
-		return
-	}
-
-	pngPath := filepath.Join(imgDir, latexImg+".png")
-
-	cmd = exec.Command("magick", "-density", "300", latexImg+".pdf", "-quality", "90", pngPath)
-	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
-
-	err = cmd.Run()
-	if err != nil {
-		http.Error(w, "ImageMagick conversion failed", http.StatusInternalServerError)
-		return
-	}
-
-	imgData, err := os.ReadFile(pngPath)
-	if err != nil {
-		http.Error(w, "Error reading image", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "image/png")
-	w.WriteHeader(http.StatusOK)
-	w.Write(imgData)
-}
-
 // save as both json and sql insert queries
 func (s *server) HandleSubmit(w http.ResponseWriter, r *http.Request) {
 
@@ -100,8 +35,78 @@ func (s *server) HandleSubmit(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "Form submitted successfully"})
 }
 
+// handle the get request
 func (s *server) HandleGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, s.html)
+}
+
+// compile latex and display
+func (s *server) HandlePreview(w http.ResponseWriter, r *http.Request) {
+
+	var currForm struct {
+		Problem string `json:"problem"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&currForm)
+	if err != nil || currForm.Problem == "" {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	imgData, err := getPng(currForm.Problem)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "image/png")
+	w.WriteHeader(http.StatusOK)
+	w.Write(imgData)
+}
+
+func getPng(problem string) ([]byte, error) {
+	const latexImg = "preview"
+
+	defer func() {
+		fileTypesToDelete := []string{".aux", ".log", ".pdf", ".tex"}
+		for _, fileType := range fileTypesToDelete {
+			os.Remove(latexImg + fileType)
+		}
+	}()
+
+	latex := fmt.Sprintf(`\documentclass[preview]{standalone}
+\usepackage{amsmath}
+\begin{document}
+%s
+\end{document}`, problem)
+
+	err := os.WriteFile(latexImg+".tex", []byte(latex), 0644)
+	if err != nil {
+		return nil, err
+	}
+
+	cmd := exec.Command("pdflatex", "-interaction=nonstopmode", latexImg+".tex")
+	cmd.Dir, cmd.Stdout, cmd.Stderr = ".", os.Stdout, os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	pngPath := filepath.Join(imgDir, latexImg+".png")
+
+	cmd = exec.Command("magick", "-density", "300", latexImg+".pdf", "-quality", "90", pngPath)
+	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	imgData, err := os.ReadFile(pngPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return imgData, nil
 }
