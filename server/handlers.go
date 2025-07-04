@@ -16,16 +16,20 @@ func (s *server) HandleSubmit(w http.ResponseWriter, r *http.Request) {
 		Problem    string `json:"problem"`
 		Section    string `json:"section"`
 		Difficulty string `json:"difficulty"`
+		Username   string `json:"username"`
+		Type       string `json:"type"`
+		Subject    string `json:"subject"`
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&currForm)
 	if err != nil || currForm.Problem == "" || currForm.Section == "" || currForm.Difficulty == "" {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		http.Error(w, "unable to write to db", http.StatusInternalServerError)
 		return
 	}
 
 	err = s.storage.InsertProblem(currForm.Section, currForm.Difficulty, currForm.Problem)
 	if err != nil {
+		fmt.Println(err.Error())
 		http.Error(w, "unable to write to db", http.StatusInternalServerError)
 		return
 	}

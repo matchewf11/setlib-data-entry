@@ -1,48 +1,75 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta charset="UTF-8">
   <title>Setlib Input</title>
 
   <style>/*STYLE*/</style>
-
 </head>
 <body>
 
   <h1>Setlib Question Input</h1>
 
-  <form id="questionForm" method="POST">
+  <form id="questionForm" onsubmit="return false;">
 
-    <hr>
-    <h3>Section</h3>
-    <input type="radio" id="data" name="section" value="data">
-    <label for="data">Data Structure</label><br>
-    <input type="radio" id="alg" name="section" value="alg">
-    <label for="alg">Algorithms</label><br>
-    <input type="radio" id="discrete" name="section" value="discrete">
-    <label for="discrete">Discrete Math</label>
+    <fieldset>
+      <legend>Author</legend>
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username">
+    </fieldset>
 
-    <hr>
-    <h3>Difficulty</h3>
-    <input type="radio" id="easy" name="difficulty" value="easy">
-    <label for="easy">EASY</label><br>
-    <input type="radio" id="medium" name="difficulty" value="medium">
-    <label for="medium">MEDIUM</label><br>
-    <input type="radio" id="hard" name="difficulty" value="hard">
-    <label for="hard">HARD</label><br>
+    <fieldset>
+      <legend>Type</legend>
+      <input type="radio" id="mult" name="type" value="mult-choice">
+      <label for="mult">Multiple Choice</label><br>
 
-    <hr>
-    <h3>Question Text</h3>
-    <button type="button" onclick="previewPost()">Preview</button>
-    <br>
-    <label for="problem">Latex Problem:</label><br>
-    <textarea id="problem" name="problem" rows="10" cols="50"></textarea>
-    <img id="previewImage" style="display:none; max-width:100%; margin-top:20px;" alt="Preview Image" />
+      <input type="radio" id="short" name="type" value="short-answer">
+      <label for="short">Short Answer</label><br>
 
-    <hr>
-    <button type="button" onclick="submitPost()">Submit</button>
+      <input type="radio" id="long" name="type" value="long-answer">
+      <label for="long">Long Answer</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Section</legend>
+      <input type="radio" id="data" name="section" value="data">
+      <label for="data">Data Structure</label><br>
+
+      <input type="radio" id="alg" name="section" value="alg">
+      <label for="alg">Algorithms</label><br>
+
+      <input type="radio" id="discrete" name="section" value="discrete">
+      <label for="discrete">Discrete Math</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Subject</legend>
+      <input type="radio" id="avl" name="subject" value="avl-tree">
+      <label for="avl">AVL Trees</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Difficulty</legend>
+      <input type="radio" id="easy" name="difficulty" value="easy">
+      <label for="easy">Easy</label><br>
+
+      <input type="radio" id="medium" name="difficulty" value="medium">
+      <label for="medium">Medium</label><br>
+
+      <input type="radio" id="hard" name="difficulty" value="hard">
+      <label for="hard">Hard</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Question Text</legend>
+      <label for="problem">LaTeX Problem:</label><br>
+      <textarea id="problem" name="problem" rows="10" cols="50"></textarea><br>
+
+      <button type="button" onclick="previewPost()">Preview</button><br>
+      <img id="previewImage" alt="Preview Image">
+    </fieldset>
+
+    <p><button type="button" onclick="submitPost()">Submit</button></p>
 
   </form>
 

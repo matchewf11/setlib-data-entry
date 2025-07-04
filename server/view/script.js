@@ -21,33 +21,36 @@ function previewPost() {
 }
 
 function submitPost() {
-  const problem = document.getElementById("problem").value;
   const form = document.getElementById("questionForm");
   const previewImage = document.getElementById("previewImage");
-  const section =
-    document.querySelector('input[name="section"]:checked')?.value || "";
-  const difficulty =
-    document.querySelector('input[name="difficulty"]:checked')?.value || "";
+  const usernameInput = document.getElementById("username");
 
-  if (!section || !difficulty || !problem) return;
+  const data = {
+    username: usernameInput.value.trim(),
+    type: document.querySelector('input[name="type"]:checked')?.value || "",
+    section: document.querySelector('input[name="section"]:checked')?.value || "",
+    subject: document.querySelector('input[name="subject"]:checked')?.value || "",
+    difficulty: document.querySelector('input[name="difficulty"]:checked')?.value || "",
+    problem: document.getElementById("problem").value.trim(),
+  };
+
+  if (Object.values(data).some(v => !v)) {
+    alert("Please fill out all fields.");
+    return;
+  }
 
   fetch("/submit", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ section, difficulty, problem }),
+    body: JSON.stringify(data),
   })
-    .then(async (response) => {
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || "Submit failed");
-      }
-      return response.json();
-    })
+    .then(res => res.ok ? res.json() : res.text().then(msg => Promise.reject(new Error(msg || "Submit failed"))))
     .then(() => {
+      const name = data.username;
       form.reset();
+      usernameInput.value = name;
+      previewImage.src = "";
       previewImage.style.display = "none";
     })
-    .catch((error) => {
-      console.error("Submit error:", error.message);
-    });
+    .catch(err => console.error("Submit error:", err.message));
 }

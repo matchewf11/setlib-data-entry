@@ -35,9 +35,10 @@ func (str *Storage) Close() {
 }
 
 func (str *Storage) InsertProblem(section, diff, prob string) error {
+	// fix this
 	_, err := str.db.Exec(`
-	INSERT INTO problems (section, difficulty, problem) 
-	VALUES (?, ?, ?);`, section, diff, prob)
+	INSERT INTO problems (section, difficulty, problem, author, topic, question_type) 
+	VALUES (?, ?, ?, ?, ?, ?);`, section, diff, prob, "Test Author", "Test Topic", "Test Type")
 	if err != nil {
 		return err
 	}
