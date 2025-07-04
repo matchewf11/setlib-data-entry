@@ -77,10 +77,12 @@ func getPng(problem string) ([]byte, error) {
 		for _, fileType := range fileTypesToDelete {
 			os.Remove(latexImg + fileType)
 		}
+		os.Remove("texput.log")
 	}()
 
 	latex := fmt.Sprintf(`\documentclass[preview]{standalone}
 \usepackage{amsmath}
+\usepackage{graphicx}
 \begin{document}
 %s
 \end{document}`, problem)
