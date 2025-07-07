@@ -35,3 +35,30 @@ legend {
   font-weight: bold;
   padding: 4px;
 }
+
+input[type="text"],
+textarea,
+select {
+  background-color: #e2e0e5;   
+  color: #563f46;
+  border: 1px solid #484f4f;
+  padding: 6px;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+}
+
+input[type="text"]:focus,
+textarea:focus,
+select:focus {
+  background-color: #ebe9ee;
+  outline: none;
+  border-color: #563f46;
+}
+
+#previewImage {
+  display: block;
+  max-width: 100%;
+  margin-top: 8px;
+}
